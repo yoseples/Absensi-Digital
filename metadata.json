@@ -1,0 +1,11 @@
+{
+  "name": "E-Absensi Digital SMA NEGERI",
+  "description": "Sistem Manajemen Absensi Digital SMA NEGERI dengan Scan QR Code, MySQL cPanel Backend, dan Laporan Rekap.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
