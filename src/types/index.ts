@@ -100,6 +100,17 @@ export interface DomainTenantConfig {
   nip_kepala_sekolah?: string;
 }
 
+export interface FirebaseAppConfig {
+  enabled: boolean;
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket?: string;
+  messagingSenderId?: string;
+  appId: string;
+  databaseURL?: string;
+}
+
 export interface AppConfig {
   nama_sekolah: string;
   npsn?: string;
@@ -121,6 +132,7 @@ export interface AppConfig {
   login_subtitle?: string; // custom description on login page (Developer only)
   login_bg_url?: string; // custom background image URL or base64 on login page (Developer only)
   mysql_api_url?: string; // custom base URL for MySQL API
+  firebase_config?: FirebaseAppConfig; // custom Firebase Realtime/Firestore config
   multi_domain_enabled?: boolean;
   domain_tenants?: DomainTenantConfig[];
   active_tenant_id?: string;

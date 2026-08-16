@@ -17,7 +17,9 @@ import {
   Gauge,
   Info,
   ExternalLink,
+  Flame,
 } from 'lucide-react';
+import { getFirebaseConfig } from '../services/firebase';
 import {
   runFullDiagnostic,
   subscribeDiagnostic,
@@ -102,6 +104,13 @@ export function AdminFooter({ currentUser, onOpenMysqlModal, onShowToast }: Admi
 
           {/* Right Status Indicator & Diagnostic Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Firebase Status Badge */}
+            {getFirebaseConfig().enabled && (
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 font-bold text-[10px]" title="Firebase Firestore Realtime Sync Active">
+                <Flame className="w-3 h-3 text-orange-500 animate-pulse shrink-0" />
+                <span className="hidden sm:inline">Firebase Realtime</span>
+              </span>
+            )}
             
             {/* Online / Offline Status Button */}
             <button

@@ -1,5 +1,6 @@
 import { Siswa, Guru, AbsensiRecord, AbsensiGuruRecord, HariLibur, AppConfig, UserSession, FilterReport, SystemLog, SystemLogLocation, AppNotification } from '../types';
 import { getApiBaseUrl, setApiBaseUrl, saveSiswaToApi, saveGuruToApi } from './api';
+import { setFirebaseData } from './firebase';
 
 const KEYS = {
   SISWA: 'e_absensi_siswa_v1',
@@ -613,6 +614,17 @@ export async function syncPushToServer(key: string, data: any) {
     });
     if (res && res.updatedAt) {
       lastServerSyncedAt = res.updatedAt;
+    }
+
+    // 3. Also sync to Firebase Firestore / Realtime DB if enabled
+    try {
+      if (Array.isArray(data)) {
+        setFirebaseData(key, 'batch', { items: data, count: data.length });
+      } else {
+        setFirebaseData(key, 'current', data);
+      }
+    } catch (fbErr) {
+      // Quietly ignore Firebase push error
     }
   } catch (err) {
     // Quietly ignore network/parsing issues

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Building, Image as ImageIcon, Calendar, Clock, RotateCcw, ShieldAlert, Upload, Check, RefreshCw, FileText, KeyRound, Copy, ShieldCheck, Award, Sparkles, Plus, Trash2, School, Tag, ListChecks, Search, Globe, Server, Download, Code, HelpCircle, Layers, CheckCircle2, ExternalLink, MessageCircle, Send, Fingerprint, ScanFace } from 'lucide-react';
+import { X, Save, Building, Image as ImageIcon, Calendar, Clock, RotateCcw, ShieldAlert, Upload, Check, RefreshCw, FileText, KeyRound, Copy, ShieldCheck, Award, Sparkles, Plus, Trash2, School, Tag, ListChecks, Search, Globe, Server, Download, Code, HelpCircle, Layers, CheckCircle2, ExternalLink, MessageCircle, Send, Fingerprint, ScanFace, Flame } from 'lucide-react';
 import { getAppConfig, saveAppConfig, clearAppCache, resetAppConfig, setActiveTestingDomain, getActiveTestingDomain, setBiometricCredentialForRole, getBiometricCredentialForRole, clearBiometricCredentialForRole } from '../services/storage';
 import { 
   getActivationState, 
@@ -14,7 +14,8 @@ import {
   deleteRegisteredLicense,
   toggleRegisteredLicenseStatus
 } from '../services/activation';
-import { AppConfig, DomainTenantConfig } from '../types';
+import { getFirebaseConfig, saveFirebaseConfig, checkFirebaseConnection } from '../services/firebase';
+import { AppConfig, DomainTenantConfig, FirebaseAppConfig } from '../types';
 
 interface PengaturanDeveloperModalProps {
   isOpen: boolean;
@@ -32,8 +33,15 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
   currentUserRole = 'developer',
 }) => {
   const isDeveloper = currentUserRole === 'developer';
-  const [activeTab, setActiveTab] = useState<'sekolah' | 'branding' | 'login_screen' | 'akademik' | 'absensi' | 'sistem' | 'cpanel'>('sekolah');
+  const [activeTab, setActiveTab] = useState<'sekolah' | 'branding' | 'login_screen' | 'akademik' | 'absensi' | 'sistem' | 'cpanel' | 'firebase'>('sekolah');
   const [config, setConfig] = useState<AppConfig>(() => getAppConfig());
+  const [fbConfig, setFbConfig] = useState<FirebaseAppConfig>(() => getFirebaseConfig());
+  const [fbTesting, setFbTesting] = useState(false);
+  const [fbStatus, setFbStatus] = useState<{ checked: boolean; success: boolean; message: string; projectId?: string }>({
+    checked: false,
+    success: false,
+    message: '',
+  });
   const [activeTestingDomain, setTestingDomainState] = useState<string | null>(() => getActiveTestingDomain());
   const [cpanelDomainInput, setCpanelDomainInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -79,6 +87,8 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
       }
       const currentConfig = getAppConfig();
       setConfig(currentConfig);
+      const currentFb = getFirebaseConfig();
+      setFbConfig(currentFb);
       const currentAct = getActivationState();
       setActState(currentAct);
       setGenAppIdInput(currentAct.appId);
@@ -282,6 +292,24 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
                 </button>
 
 
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('firebase')}
+                  className={`w-auto md:w-full shrink-0 whitespace-nowrap flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl font-semibold text-xs transition ${
+                    activeTab === 'firebase'
+                      ? 'bg-amber-500 text-slate-950 font-extrabold shadow-sm'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Flame className="w-4 h-4 text-orange-500 shrink-0" />
+                    <span>Database Firebase</span>
+                  </div>
+                  <span className="bg-orange-100 text-orange-900 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                    Realtime
+                  </span>
+                </button>
 
                 <button
                   type="button"
@@ -1169,6 +1197,181 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
                       </ul>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'firebase' && (
+              <div className="space-y-5 animate-fade-in">
+                <div className="border-b border-slate-200 pb-3 flex items-center justify-between">
+                  <div>
+                    <h4 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                      <Flame className="w-5 h-5 text-orange-500" />
+                      <span>Integrasi Firebase Firestore & Realtime Database</span>
+                    </h4>
+                    <p className="text-xs text-slate-500">
+                      Hubungkan ke Firebase untuk sinkronisasi data presensi secara instan (Realtime Multi-Device Sync).
+                    </p>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                    fbConfig.enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {fbConfig.enabled ? '🟢 Fitur Aktif' : '⚪ Dinonaktifkan'}
+                  </span>
+                </div>
+
+                {/* Enable Switch */}
+                <div className="p-4 bg-orange-50/70 border border-orange-200 rounded-xl flex items-center justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <span className="font-bold text-xs text-orange-950 block">Status Fitur Sync Firebase:</span>
+                    <span className="text-[11px] text-slate-600">
+                      Jika diaktifkan, data presensi akan ter-sync otomatis ke Firestore & Realtime Database saat di-scan atau diubah.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = { ...fbConfig, enabled: !fbConfig.enabled };
+                      setFbConfig(updated);
+                      saveFirebaseConfig(updated);
+                      onShowToast(`Sync Firebase ${updated.enabled ? 'Diaktifkan' : 'Dinonaktifkan'}!`, 'info');
+                    }}
+                    className={`px-4 py-2 rounded-xl text-xs font-extrabold transition shrink-0 cursor-pointer ${
+                      fbConfig.enabled
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
+                        : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                    }`}
+                  >
+                    {fbConfig.enabled ? 'Nonaktifkan' : 'Aktifkan Sync'}
+                  </button>
+                </div>
+
+                {/* Status Alert Box */}
+                {fbStatus.checked && (
+                  <div className={`p-4 rounded-xl border flex items-start gap-3 text-xs ${
+                    fbStatus.success
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                      : 'bg-rose-50 border-rose-200 text-rose-950'
+                  }`}>
+                    {fbStatus.success ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                    ) : (
+                      <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                    )}
+                    <div>
+                      <div className="font-bold">{fbStatus.success ? 'Koneksi Berhasil!' : 'Koneksi Gagal / Belum Siap'}</div>
+                      <div className="text-[11px] mt-0.5">{fbStatus.message}</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Input Fields */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      API Key (apiKey) *
+                    </label>
+                    <input
+                      type="text"
+                      value={fbConfig.apiKey || ''}
+                      onChange={(e) => setFbConfig((prev) => ({ ...prev, apiKey: e.target.value }))}
+                      placeholder="AIzaSyXXXXXXXXXXXXXXXX"
+                      className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Project ID (projectId) *
+                    </label>
+                    <input
+                      type="text"
+                      value={fbConfig.projectId || ''}
+                      onChange={(e) => setFbConfig((prev) => ({ ...prev, projectId: e.target.value }))}
+                      placeholder="e-absensi-digital-v2"
+                      className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Auth Domain (authDomain)
+                    </label>
+                    <input
+                      type="text"
+                      value={fbConfig.authDomain || ''}
+                      onChange={(e) => setFbConfig((prev) => ({ ...prev, authDomain: e.target.value }))}
+                      placeholder="e-absensi.firebaseapp.com"
+                      className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      App ID (appId)
+                    </label>
+                    <input
+                      type="text"
+                      value={fbConfig.appId || ''}
+                      onChange={(e) => setFbConfig((prev) => ({ ...prev, appId: e.target.value }))}
+                      placeholder="1:1234567890:web:abcdef123456"
+                      className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Database URL (Realtime DB)
+                    </label>
+                    <input
+                      type="text"
+                      value={fbConfig.databaseURL || ''}
+                      onChange={(e) => setFbConfig((prev) => ({ ...prev, databaseURL: e.target.value }))}
+                      placeholder="https://project-id-default-rtdb.firebaseio.com"
+                      className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Storage Bucket
+                    </label>
+                    <input
+                      type="text"
+                      value={fbConfig.storageBucket || ''}
+                      onChange={(e) => setFbConfig((prev) => ({ ...prev, storageBucket: e.target.value }))}
+                      placeholder="project-id.appspot.com"
+                      className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setFbTesting(true);
+                      saveFirebaseConfig(fbConfig);
+                      const res = await checkFirebaseConnection();
+                      setFbStatus({ checked: true, success: res.success, message: res.message, projectId: res.projectId });
+                      setFbTesting(false);
+                      if (res.success) {
+                        onShowToast('Koneksi Firebase Firestore BERHASIL!', 'success');
+                      } else {
+                        onShowToast(res.message, 'error');
+                      }
+                    }}
+                    disabled={fbTesting}
+                    className="px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${fbTesting ? 'animate-spin' : ''}`} />
+                    <span>Uji & Simpan Koneksi Firebase</span>
+                  </button>
+
+                  <p className="text-[11px] text-slate-500 italic">
+                    Konfigurasi tersimpan otomatis dan disinkronkan ke local storage browser.
+                  </p>
                 </div>
               </div>
             )}
