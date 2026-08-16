@@ -23,6 +23,7 @@ interface PengaturanDeveloperModalProps {
   onShowToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
   onConfigUpdated?: () => void;
   currentUserRole?: string;
+  onOpenDatabaseModal?: () => void;
 }
 
 export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> = ({
@@ -31,6 +32,7 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
   onShowToast,
   onConfigUpdated,
   currentUserRole = 'developer',
+  onOpenDatabaseModal,
 }) => {
   const isDeveloper = currentUserRole === 'developer';
   const [activeTab, setActiveTab] = useState<'sekolah' | 'branding' | 'login_screen' | 'akademik' | 'absensi' | 'sistem' | 'cpanel'>('sekolah');
@@ -300,6 +302,26 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
                 </button>
               </>
             )}
+
+            {/* Quick Access to Unified Database Modal */}
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  if (onOpenDatabaseModal) onOpenDatabaseModal();
+                }}
+                className="w-auto md:w-full shrink-0 whitespace-nowrap flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl font-bold text-xs text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 dark:text-indigo-300 transition cursor-pointer border border-indigo-200 dark:border-indigo-800 shadow-2xs"
+              >
+                <div className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                  <span>Database</span>
+                </div>
+                <span className="bg-indigo-200 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-200 text-[9px] px-1.5 py-0.5 rounded-full font-extrabold uppercase">
+                  Firebase/SQL
+                </span>
+              </button>
+            </div>
           </div>
 
           {/* Tab Content Form */}

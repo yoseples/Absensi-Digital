@@ -562,25 +562,23 @@ export const DashboardAdmin: React.FC<DashboardAdminProps> = ({ onNavigate, onSh
                 </div>
               </button>
 
-              {isDeveloper && (
-                <>
-                  <button
-                    onClick={() => onNavigate('open-mysql-modal')}
-                    className="w-full flex items-center p-3 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 transition-all group text-left cursor-pointer shadow-2xs"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center mr-3 group-hover:scale-110 transition shrink-0 shadow-sm">
-                      <Database className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs text-indigo-950 flex items-center gap-1.5">
-                        <span>Database</span>
-                        <span className="px-1.5 py-0.5 bg-amber-500 text-slate-950 text-[9px] font-extrabold uppercase rounded">Developer</span>
-                      </div>
-                      <div className="text-[10px] text-indigo-700">Firebase, Supabase & MySQL cPanel</div>
-                    </div>
-                  </button>
-                </>
-              )}
+              <button
+                onClick={() => onNavigate('open-mysql-modal')}
+                className="w-full flex items-center p-3 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 transition-all group text-left cursor-pointer shadow-2xs"
+              >
+                <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center mr-3 group-hover:scale-110 transition shrink-0 shadow-sm">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="font-bold text-xs text-indigo-950 flex items-center gap-1.5">
+                    <span>Database</span>
+                    <span className="px-1.5 py-0.5 bg-amber-500 text-slate-950 text-[9px] font-extrabold uppercase rounded">
+                      {isDeveloper ? 'Developer' : 'Admin'}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-indigo-700">Firebase, Supabase & MySQL cPanel</div>
+                </div>
+              </button>
 
               <button
                 onClick={() => onNavigate('view-system-logs')}

@@ -332,7 +332,7 @@ export default function App() {
           key={`navbar_${configVersion}`}
           pageTitle={getPageTitle()}
           onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
-          onOpenMysqlModal={currentUser.role === 'developer' ? () => setIsMysqlModalOpen(true) : undefined}
+          onOpenMysqlModal={currentUser.role === 'developer' || currentUser.role === 'admin' ? () => setIsMysqlModalOpen(true) : undefined}
           onOpenDevSettings={currentUser.role === 'developer' || currentUser.role === 'admin' ? () => setIsDevSettingsModalOpen(true) : undefined}
           onOpenActivationModal={() => setIsActivationModalOpen(true)}
           onOpenAiBot={() => setIsAiBotOpen(true)}
@@ -356,7 +356,7 @@ export default function App() {
                     currentUser={currentUser}
                     onNavigate={(v) => {
                       if (v === 'open-mysql-modal') {
-                        if (currentUser?.role === 'developer') setIsMysqlModalOpen(true);
+                        setIsMysqlModalOpen(true);
                         return;
                       }
                       if (v === 'open-dev-settings') {
@@ -476,7 +476,7 @@ export default function App() {
         {/* Diagnostic Status Indicator Footer */}
         <AdminFooter
           currentUser={currentUser}
-          onOpenMysqlModal={currentUser.role === 'developer' ? () => setIsMysqlModalOpen(true) : undefined}
+          onOpenMysqlModal={currentUser.role === 'developer' || currentUser.role === 'admin' ? () => setIsMysqlModalOpen(true) : undefined}
           onShowToast={showToast}
         />
       </main>
@@ -496,8 +496,8 @@ export default function App() {
         onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
       />
 
-        {/* MySQL cPanel Configuration Modal (Developer Only) */}
-        {isMysqlModalOpen && currentUser.role === 'developer' && (
+        {/* Unified Database Configuration Modal (Admin & Developer) */}
+        {isMysqlModalOpen && (currentUser.role === 'developer' || currentUser.role === 'admin') && (
           <PengaturanMysqlModal
             isOpen={isMysqlModalOpen}
             onClose={() => setIsMysqlModalOpen(false)}
@@ -513,6 +513,7 @@ export default function App() {
             onShowToast={showToast}
             onConfigUpdated={() => setConfigVersion((prev) => prev + 1)}
             currentUserRole={currentUser.role}
+            onOpenDatabaseModal={() => setIsMysqlModalOpen(true)}
           />
         )}
 
