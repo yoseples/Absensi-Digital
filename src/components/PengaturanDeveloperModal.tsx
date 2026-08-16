@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Building, Image as ImageIcon, Calendar, Clock, RotateCcw, ShieldAlert, Upload, Check, RefreshCw, FileText, KeyRound, Copy, ShieldCheck, Award, Sparkles, Plus, Trash2, School, Tag, ListChecks, Search, Globe, Server, Download, Code, HelpCircle, Layers, CheckCircle2, ExternalLink, MessageCircle, Send, Fingerprint, ScanFace, Flame, Zap } from 'lucide-react';
+import { X, Save, Building, Image as ImageIcon, Calendar, Clock, RotateCcw, ShieldAlert, Upload, Check, RefreshCw, FileText, KeyRound, Copy, ShieldCheck, Award, Sparkles, Plus, Trash2, School, Tag, ListChecks, Search, Globe, Server, Download, Code, HelpCircle, Layers, CheckCircle2, ExternalLink, MessageCircle, Send, Fingerprint, ScanFace, Flame, Zap, Database } from 'lucide-react';
 import { getAppConfig, saveAppConfig, clearAppCache, resetAppConfig, setActiveTestingDomain, getActiveTestingDomain, setBiometricCredentialForRole, getBiometricCredentialForRole, clearBiometricCredentialForRole } from '../services/storage';
 import { 
   getActivationState, 
@@ -1101,20 +1101,21 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
                       type="button"
                       onClick={() => {
                         const domain = cpanelDomainInput.trim().replace(/\/$/, '') || 'https://sekolah.sch.id';
+                        const ogTitle = `${config.judul_aplikasi?.trim() || 'Absensi'} - ${config.nama_sekolah || 'SMA NEGERI'}`;
                         const ogCode = `<meta property="og:type" content="website" />
-<meta property="og:title" content="E-Absensi ${config.nama_sekolah || 'SMA NEGERI'}" />
-<meta property="og:description" content="Sistem Absensi Digital, Presensi QR Code & GPS ${config.nama_sekolah || 'SMA NEGERI'}." />
+<meta property="og:title" content="${ogTitle}" />
+<meta property="og:description" content="Sistem ${config.judul_aplikasi?.trim() || 'Absensi'} Digital, Presensi QR Code & GPS ${config.nama_sekolah || 'SMA NEGERI'}." />
 <meta property="og:url" content="${domain}/" />
 <meta property="og:image" content="${domain}/logo.png" />
 <meta property="og:image:secure_url" content="${domain}/logo.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="512" />
 <meta property="og:image:height" content="512" />
-<meta property="og:site_name" content="E-Absensi ${config.nama_sekolah || 'SMA NEGERI'}" />
+<meta property="og:site_name" content="${ogTitle}" />
 
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="E-Absensi ${config.nama_sekolah || 'SMA NEGERI'}" />
-<meta name="twitter:description" content="Sistem Absensi Digital, Presensi QR Code & GPS ${config.nama_sekolah || 'SMA NEGERI'}." />
+<meta name="twitter:title" content="${ogTitle}" />
+<meta name="twitter:description" content="Sistem ${config.judul_aplikasi?.trim() || 'Absensi'} Digital, Presensi QR Code & GPS ${config.nama_sekolah || 'SMA NEGERI'}." />
 <meta name="twitter:image" content="${domain}/logo.png" />`;
                         navigator.clipboard.writeText(ogCode);
                         onShowToast('Kode Meta Tags Open Graph cPanel berhasil disalin!', 'success');
@@ -1128,15 +1129,15 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
 
                   <pre className="p-3 bg-slate-900 text-emerald-400 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed">
 {`<meta property="og:type" content="website" />
-<meta property="og:title" content="E-Absensi ${config.nama_sekolah || 'SMA NEGERI'}" />
-<meta property="og:description" content="Sistem Absensi Digital, Presensi QR Code & GPS ${config.nama_sekolah || 'SMA NEGERI'}." />
+<meta property="og:title" content="${(config.judul_aplikasi?.trim() || 'Absensi')} - ${config.nama_sekolah || 'SMA NEGERI'}" />
+<meta property="og:description" content="Sistem ${config.judul_aplikasi?.trim() || 'Absensi'} Digital, Presensi QR Code & GPS ${config.nama_sekolah || 'SMA NEGERI'}." />
 <meta property="og:url" content="${cpanelDomainInput.trim().replace(/\/$/, '') || 'https://sekolah.sch.id'}/" />
 <meta property="og:image" content="${cpanelDomainInput.trim().replace(/\/$/, '') || 'https://sekolah.sch.id'}/logo.png" />
 <meta property="og:image:secure_url" content="${cpanelDomainInput.trim().replace(/\/$/, '') || 'https://sekolah.sch.id'}/logo.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="512" />
 <meta property="og:image:height" content="512" />
-<meta property="og:site_name" content="E-Absensi ${config.nama_sekolah || 'SMA NEGERI'}" />`}
+<meta property="og:site_name" content="${(config.judul_aplikasi?.trim() || 'Absensi')} - ${config.nama_sekolah || 'SMA NEGERI'}" />`}
                   </pre>
                 </div>
 

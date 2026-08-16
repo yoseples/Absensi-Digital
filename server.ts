@@ -288,9 +288,13 @@ app.get(['/manifest.json', '/api/manifest.json'], (req, res) => {
     ? cfg.nama_sekolah.trim() 
     : 'SMA NEGERI';
 
+  const appTitle = cfg.judul_aplikasi && cfg.judul_aplikasi.trim() !== ''
+    ? cfg.judul_aplikasi.trim()
+    : 'Absensi';
+
   const pwaShortName = schoolName;
-  const pwaFullName = `E-Absensi ${schoolName}`;
-  const description = `Sistem Absensi Digital, Presensi QR Code & GPS ${schoolName}`;
+  const pwaFullName = `${appTitle} - ${schoolName}`;
+  const description = `Sistem ${appTitle} Digital, Presensi QR Code & GPS ${schoolName}`;
 
   let logoUrl = '/logo.png';
   if (cfg.logo_url) {
@@ -379,7 +383,7 @@ function injectOpenGraphMeta(html: string, req: express.Request): string {
     <title>${title}</title>
     <meta name="description" content="${description}" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="E-Absensi ${schoolName}" />
+    <meta property="og:site_name" content="${appTitle} - ${schoolName}" />
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
     <meta property="og:url" content="${fullPageUrl}" />

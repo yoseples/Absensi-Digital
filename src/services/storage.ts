@@ -1145,7 +1145,7 @@ export function applyAppMetaData(cfg?: AppConfig) {
 
   // Dynamic PWA Web Manifest & Android/iOS Home Screen Title Generator
   const pwaShortName = schoolName;
-  const pwaFullName = `E-Absensi ${schoolName}`;
+  const pwaFullName = `${appTitle} - ${schoolName}`;
 
   setMeta('name', 'application-name', pwaShortName);
   setMeta('name', 'apple-mobile-web-app-title', pwaShortName);
