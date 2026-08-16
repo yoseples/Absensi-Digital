@@ -119,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="sidebar-label transition-opacity duration-300 whitespace-nowrap">
                 <div className="flex items-center gap-1.5">
                   <h1 className="font-extrabold text-sm tracking-wide text-white">ABSENSI DIGITAL</h1>
-                  <span className="text-[8px] font-black bg-amber-400 text-slate-950 px-1 py-0.2 rounded">v2.0</span>
+                  <span className="text-[8px] font-black bg-amber-400 text-slate-950 px-1 py-0.2 rounded">v2.1</span>
                 </div>
                 <p className="text-[9px] text-indigo-200 uppercase tracking-wider font-semibold truncate max-w-[140px]">
                   {getSchoolName()}

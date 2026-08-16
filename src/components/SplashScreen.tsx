@@ -153,7 +153,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-spin" style={{ animationDuration: '6s' }} />
           <span>NATIVE MOBILE PWA APPS</span>
           <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-          <span className="text-[11px] text-blue-200/80 font-mono">v2.0</span>
+          <span className="text-[11px] text-blue-200/80 font-mono">v2.1</span>
         </motion.div>
 
         {/* Logo Container with Glowing Ring Effect */}

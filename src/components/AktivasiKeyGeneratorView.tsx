@@ -95,10 +95,10 @@ export const AktivasiKeyGeneratorView: React.FC<AktivasiKeyGeneratorViewProps> =
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                Aktivasi & Key Generator Lisensi V2.0
+                Aktivasi & Key Generator Lisensi V2.1
               </h2>
               <span className="bg-amber-400 text-slate-950 font-black text-[10px] uppercase px-2 py-0.5 rounded-full tracking-wider">
-                Aktivasi Terpusat V2.0
+                Aktivasi Terpusat V2.1
               </span>
               <span className="bg-indigo-600 text-white font-bold text-[10px] uppercase px-2 py-0.5 rounded-full tracking-wider border border-indigo-400/40">
                 Developer Panel

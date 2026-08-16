@@ -574,7 +574,7 @@ export const DashboardGuru: React.FC<DashboardGuruProps> = ({
                   Peringatan Ambang Batas Ketidakhadiran (Alpa)
                 </h3>
                 <span className="px-2 py-0.5 bg-rose-600 text-white text-[10px] font-black uppercase rounded-full">
-                  Sistem Absensi Digital v2.0
+                  Sistem Absensi Digital v2.1
                 </span>
               </div>
               <p className="text-xs text-slate-600 mt-0.5">

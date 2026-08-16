@@ -337,7 +337,7 @@ function initStorage() {
         id: `log_init_01`,
         timestamp: formattedNow,
         type: 'system',
-        action: 'Inisialisasi Sistem Absensi Digital v2.0',
+        action: 'Inisialisasi Sistem Absensi Digital v2.1',
         user: 'system',
         role: 'developer',
         status: 'info',

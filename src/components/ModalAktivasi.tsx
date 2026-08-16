@@ -102,10 +102,10 @@ export const ModalAktivasi: React.FC<ModalAktivasiProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-base sm:text-lg text-white leading-tight flex items-center gap-2">
-                <span>Aktivasi Lisensi Aplikasi V2.0</span>
-                <span className="px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[9px] font-black uppercase rounded">V2.0</span>
+                <span>Aktivasi Lisensi Aplikasi V2.1</span>
+                <span className="px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[9px] font-black uppercase rounded">V2.1</span>
               </h3>
-              <p className="text-xs text-slate-400">Status Lisensi & Sistem Aktivasi Terpusat V2.0</p>
+              <p className="text-xs text-slate-400">Status Lisensi & Sistem Aktivasi Terpusat V2.1</p>
             </div>
           </div>
           <button

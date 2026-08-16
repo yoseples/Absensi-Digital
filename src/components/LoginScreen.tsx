@@ -445,7 +445,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2.5 py-0.5 bg-amber-400 text-slate-950 text-[11px] font-black uppercase rounded-md shadow-xs">
-                v2.0
+                v2.1
               </span>
               <span className="text-xs text-indigo-200 font-semibold tracking-wide uppercase">Rilis Resmi</span>
             </div>
@@ -465,7 +465,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-medium text-indigo-200">
               <div className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 font-bold">
-                v2.0
+                v2.1
               </div>
               <div className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10">
                 Secure QR Login
@@ -1182,11 +1182,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
               <div>
                 <span className="px-2.5 py-0.5 bg-rose-100 text-rose-800 text-[10px] font-black uppercase rounded-full border border-rose-200">
-                  Keamanan Sistem v2.0
+                  Keamanan Sistem v2.1
                 </span>
                 <h3 className="text-lg font-extrabold text-slate-900 mt-1">Akses Lokasi GPS Ditolak!</h3>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  Sesuai kebijakan keamanan <strong className="text-slate-900">Sistem Absensi Digital v2.0</strong>, akun <strong className="text-rose-600">Guru / Wali Kelas WAJIB mengizinkan lokasi GPS</strong> pada perangkat ini saat login.
+                  Sesuai kebijakan keamanan <strong className="text-slate-900">Sistem Absensi Digital v2.1</strong>, akun <strong className="text-rose-600">Guru / Wali Kelas WAJIB mengizinkan lokasi GPS</strong> pada perangkat ini saat login.
                 </p>
               </div>
 
@@ -1226,7 +1226,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       )}
 
       <p className="absolute bottom-4 text-slate-500 text-xs font-medium opacity-70">
-        © 2026 {getSchoolName()}. Sistem Absensi Digital v2.0 (Aktivasi Terpusat)
+        © 2026 {getSchoolName()}. Sistem Absensi Digital v2.1 (Aktivasi Terpusat)
       </p>
     </div>
   );
