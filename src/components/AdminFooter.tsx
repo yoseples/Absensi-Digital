@@ -18,8 +18,10 @@ import {
   Info,
   ExternalLink,
   Flame,
+  Zap,
 } from 'lucide-react';
 import { getFirebaseConfig } from '../services/firebase';
+import { getSupabaseConfig } from '../services/supabase';
 import {
   runFullDiagnostic,
   subscribeDiagnostic,
@@ -109,6 +111,14 @@ export function AdminFooter({ currentUser, onOpenMysqlModal, onShowToast }: Admi
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 font-bold text-[10px]" title="Firebase Firestore Realtime Sync Active">
                 <Flame className="w-3 h-3 text-orange-500 animate-pulse shrink-0" />
                 <span className="hidden sm:inline">Firebase Realtime</span>
+              </span>
+            )}
+
+            {/* Supabase Status Badge */}
+            {getSupabaseConfig().enabled && (
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-bold text-[10px]" title="Supabase PostgreSQL Total Isolation Active">
+                <Zap className="w-3 h-3 text-emerald-500 animate-pulse shrink-0" />
+                <span className="hidden sm:inline">Supabase Realtime</span>
               </span>
             )}
             
