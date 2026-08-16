@@ -541,15 +541,36 @@ async function safeFetchJson(url: string, options?: RequestInit): Promise<any | 
 export async function syncPushToServer(key: string, data: any) {
   if (typeof fetch === 'undefined') return;
   try {
-    const baseUrl = getApiBaseUrl(); // Configured cPanel MySQL URL or /api
+    // === PRIORITY 1: Firebase Firestore / Realtime DB ===
+    try {
+      if (Array.isArray(data)) {
+        setFirebaseData(key, 'batch', { items: data, count: data.length });
+      } else {
+        setFirebaseData(key, 'current', data);
+      }
+    } catch {
+      // Quietly ignore Firebase push error
+    }
 
-    // Helper for parallel batch chunking
+    // === PRIORITY 2: Supabase PostgreSQL (Total Tenant Isolation) ===
+    try {
+      if (Array.isArray(data)) {
+        setSupabaseData(key, 'batch', { items: data, count: data.length });
+      } else {
+        setSupabaseData(key, 'current', data);
+      }
+    } catch {
+      // Quietly ignore Supabase push error
+    }
+
+    // === PRIORITY 3: MySQL cPanel + Express backend (fire-and-forget) ===
+    const baseUrl = getApiBaseUrl();
+
     const pushInBatchChunks = async (endpoint: string, items: any[], chunkSize: number) => {
       const chunks: any[][] = [];
       for (let i = 0; i < items.length; i += chunkSize) {
         chunks.push(items.slice(i, i + chunkSize));
       }
-      // Send max 3 requests concurrently to prevent connection overhead and server timeout
       const concurrency = 3;
       for (let i = 0; i < chunks.length; i += concurrency) {
         const batch = chunks.slice(i, i + concurrency);
@@ -565,100 +586,46 @@ export async function syncPushToServer(key: string, data: any) {
       }
     };
 
-    // 1. Sync directly to cPanel MySQL PHP API endpoints if configured
+    // Sync to cPanel MySQL PHP API endpoints (async, non-blocking for primary flow)
     if (key === 'siswa') {
       if (Array.isArray(data)) {
-        await pushInBatchChunks(`${baseUrl}/siswa.php`, data, 35);
+        pushInBatchChunks(`${baseUrl}/siswa.php`, data, 35).catch(() => {});
       } else {
-        await safeFetchJson(`${baseUrl}/siswa.php`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
+        safeFetchJson(`${baseUrl}/siswa.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).catch(() => {});
       }
     } else if (key === 'guru') {
       if (Array.isArray(data)) {
-        await pushInBatchChunks(`${baseUrl}/guru.php`, data, 35);
+        pushInBatchChunks(`${baseUrl}/guru.php`, data, 35).catch(() => {});
       } else {
-        await safeFetchJson(`${baseUrl}/guru.php`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
+        safeFetchJson(`${baseUrl}/guru.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).catch(() => {});
       }
     } else if (key === 'absensi') {
       if (Array.isArray(data)) {
-        await pushInBatchChunks(`${baseUrl}/absensi.php`, data, 75);
+        pushInBatchChunks(`${baseUrl}/absensi.php`, data, 75).catch(() => {});
       } else {
-        await safeFetchJson(`${baseUrl}/absensi.php`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
+        safeFetchJson(`${baseUrl}/absensi.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).catch(() => {});
       }
     } else if (key === 'libur') {
-      await safeFetchJson(`${baseUrl}/kelola.php?action=libur`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      safeFetchJson(`${baseUrl}/kelola.php?action=libur`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).catch(() => {});
     } else if (key === 'config' && data && typeof data === 'object') {
-      await Promise.all([
-        safeFetchJson(`${baseUrl}/kelola.php?action=config`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        }),
-        safeFetchJson(`${baseUrl}/kelola.php?action=jam`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jamMasuk: data.jam_masuk_mulai || '07:00',
-            jamPulang: data.jam_pulang_mulai || '15:00',
-            toleransi: 15,
-          }),
-        }),
-        safeFetchJson('/api/app-config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        }),
-      ]);
+      Promise.all([
+        safeFetchJson(`${baseUrl}/kelola.php?action=config`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+        safeFetchJson(`${baseUrl}/kelola.php?action=jam`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jamMasuk: data.jam_masuk_mulai || '07:00', jamPulang: data.jam_pulang_mulai || '15:00', toleransi: 15 }) }),
+        safeFetchJson('/api/app-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+      ]).catch(() => {});
     }
 
-    // 2. Also sync to Express backend /api/db if running
-    const res = await safeFetchJson('/api/db', {
+    // Sync to Express /api/db (fire-and-forget)
+    safeFetchJson('/api/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [key]: data }),
-    });
-    if (res && res.updatedAt) {
-      lastServerSyncedAt = res.updatedAt;
-    }
+    }).then((res) => {
+      if (res && res.updatedAt) lastServerSyncedAt = res.updatedAt;
+    }).catch(() => {});
 
-    // 3. Also sync to Firebase Firestore / Realtime DB if enabled
-    try {
-      if (Array.isArray(data)) {
-        setFirebaseData(key, 'batch', { items: data, count: data.length });
-      } else {
-        setFirebaseData(key, 'current', data);
-      }
-    } catch (fbErr) {
-      // Quietly ignore Firebase push error
-    }
-
-    // 4. Also sync to Supabase Database (Total Isolation Method) if enabled
-    try {
-      if (Array.isArray(data)) {
-        setSupabaseData(key, 'batch', { items: data, count: data.length });
-      } else {
-        setSupabaseData(key, 'current', data);
-      }
-    } catch (sbErr) {
-      // Quietly ignore Supabase push error
-    }
   } catch (err) {
-    // Quietly ignore network/parsing issues
+    // Quietly ignore errors
   }
 }
 

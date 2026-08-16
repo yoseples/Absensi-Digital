@@ -18,17 +18,31 @@ export const DEFAULT_SUPABASE_CONFIG: SupabaseAppConfig = {
 let cachedClientMap: Record<string, SupabaseClient> = {};
 let activeRealtimeChannels: any[] = [];
 
+// Returns a domain-slug-aware localStorage key for Supabase config
+function getSupabaseStorageKey(domain?: string): string {
+  const slug = (domain || (typeof window !== 'undefined' ? getActiveDomainSlug() : 'default'))
+    .toLowerCase().replace(/[^a-z0-9]/g, '_');
+  // If slug is "localhost" or "default", just use the global key (single-instance dev mode)
+  if (!slug || slug === 'localhost' || slug === 'default' || slug === '127_0_0_1') {
+    return SUPABASE_STORAGE_KEY;
+  }
+  return `${SUPABASE_STORAGE_KEY}_${slug}`;
+}
+
 export function getSupabaseConfig(domain?: string): SupabaseAppConfig {
   if (typeof window !== 'undefined') {
     try {
-      // 1. Check domain tenant custom Supabase config
+      // 1. Check domain tenant config embedded in AppConfig (domain_tenants)
       const appConfigRaw = localStorage.getItem('e_absensi_config_v1');
       if (appConfigRaw) {
         const appConfig: AppConfig = JSON.parse(appConfigRaw);
         if (appConfig.domain_tenants && Array.isArray(appConfig.domain_tenants)) {
           const targetDomain = domain || window.location.hostname;
           const tenant = appConfig.domain_tenants.find((t: DomainTenantConfig) =>
-            t.domain && (t.domain.toLowerCase().trim() === targetDomain.toLowerCase().trim() || targetDomain.toLowerCase().includes(t.domain.toLowerCase().trim()))
+            t.domain && (
+              t.domain.toLowerCase().trim() === targetDomain.toLowerCase().trim() ||
+              targetDomain.toLowerCase().includes(t.domain.toLowerCase().trim())
+            )
           );
           if (tenant && tenant.supabase_config && tenant.supabase_config.supabaseUrl) {
             return { ...DEFAULT_SUPABASE_CONFIG, ...tenant.supabase_config };
@@ -36,42 +50,67 @@ export function getSupabaseConfig(domain?: string): SupabaseAppConfig {
         }
       }
 
-      // 2. Global fallback Supabase config
+      // 2. Check domain-slug-aware key (tenant-partitioned)
+      const tenantKey = getSupabaseStorageKey(domain);
+      if (tenantKey !== SUPABASE_STORAGE_KEY) {
+        const tenantStored = localStorage.getItem(tenantKey);
+        if (tenantStored) {
+          return { ...DEFAULT_SUPABASE_CONFIG, ...JSON.parse(tenantStored) };
+        }
+      }
+
+      // 3. Global fallback key (always check last for backward compatibility)
       const stored = localStorage.getItem(SUPABASE_STORAGE_KEY);
       if (stored) {
         return { ...DEFAULT_SUPABASE_CONFIG, ...JSON.parse(stored) };
       }
     } catch (e) {
-      console.warn('[Supabase Total Isolation] Error reading config from storage:', e);
+      console.warn('[Supabase] Error reading config:', e);
     }
   }
-  return DEFAULT_SUPABASE_CONFIG;
+  return { ...DEFAULT_SUPABASE_CONFIG };
 }
 
 export function saveSupabaseConfig(cfg: SupabaseAppConfig, domain?: string): void {
   if (typeof window === 'undefined') return;
   try {
-    if (domain) {
-      const appConfigRaw = localStorage.getItem('e_absensi_config_v1');
-      if (appConfigRaw) {
-        const appConfig: AppConfig = JSON.parse(appConfigRaw);
-        if (appConfig.domain_tenants && Array.isArray(appConfig.domain_tenants)) {
-          appConfig.domain_tenants = appConfig.domain_tenants.map((t) => {
-            if (t.domain && t.domain.toLowerCase().trim() === domain.toLowerCase().trim()) {
-              return { ...t, supabase_config: cfg };
+    // 1. Save to domain-slug-aware tenant key
+    const tenantKey = getSupabaseStorageKey(domain);
+    localStorage.setItem(tenantKey, JSON.stringify(cfg));
+
+    // 2. Always save to global fallback key too (for backward compat & single-domain mode)
+    localStorage.setItem(SUPABASE_STORAGE_KEY, JSON.stringify(cfg));
+
+    // 3. Also embed into AppConfig domain_tenants if a specific domain is targeted
+    if (domain && domain.trim()) {
+      try {
+        const appConfigRaw = localStorage.getItem('e_absensi_config_v1');
+        if (appConfigRaw) {
+          const appConfig: AppConfig = JSON.parse(appConfigRaw);
+          if (appConfig.domain_tenants && Array.isArray(appConfig.domain_tenants)) {
+            let found = false;
+            appConfig.domain_tenants = appConfig.domain_tenants.map((t) => {
+              if (t.domain && t.domain.toLowerCase().trim() === domain.toLowerCase().trim()) {
+                found = true;
+                return { ...t, supabase_config: cfg };
+              }
+              return t;
+            });
+            // If domain not found in tenant list, add it
+            if (!found) {
+              appConfig.domain_tenants.push({ domain, supabase_config: cfg } as any);
             }
-            return t;
-          });
-          localStorage.setItem('e_absensi_config_v1', JSON.stringify(appConfig));
+            localStorage.setItem('e_absensi_config_v1', JSON.stringify(appConfig));
+          }
         }
-      }
+      } catch { /* ignore config embedding error */ }
     }
 
-    localStorage.setItem(SUPABASE_STORAGE_KEY, JSON.stringify(cfg));
+    // 4. Reset client cache so new config is used
     cachedClientMap = {};
     initSupabase(domain);
   } catch (e) {
-    console.error('[Supabase Total Isolation] Error saving config:', e);
+    console.error('[Supabase] Error saving config:', e);
   }
 }
 
