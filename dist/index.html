@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="id" style="background-color: #020617; color: #ffffff;">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>E-Absensi Sekolah - Sistem Absensi Digital & Presensi GPS</title>
+    <meta name="description" content="Sistem Absensi Digital, Presensi QR Code & GPS Sekolah." />
+    
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="E-Absensi Sekolah - Sistem Absensi Digital v2.0" />
+    <meta property="og:description" content="Sistem Absensi Digital, Presensi QR Code & GPS Sekolah." />
+    <meta property="og:image" content="./logo.png" />
+    <meta property="og:image:secure_url" content="./logo.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:site_name" content="E-Absensi Sekolah" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="E-Absensi Sekolah - Sistem Absensi Digital v2.0" />
+    <meta name="twitter:description" content="Sistem Absensi Digital, Presensi QR Code & GPS Sekolah." />
+    <meta name="twitter:image" content="./logo.png" />
+
+    <!-- PWA Web App Manifest & Mobile Web App Meta Tags -->
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#1d4ed8" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="E-Absensi" />
+
+    <link rel="icon" type="image/png" href="./logo.png" />
+    <link rel="shortcut icon" href="./logo.png" />
+    <link rel="apple-touch-icon" href="./logo.png" />
+
+    <!-- Emergency Global Error Catch (Prevents Blank White Screen) -->
+    <script>
+      window.addEventListener('error', function (e) {
+        console.error('[Emergency Error Catch]', e);
+        var el = document.getElementById('splash-fallback');
+        if (el) {
+          el.style.opacity = '1';
+          el.style.pointerEvents = 'auto';
+          el.innerHTML = '<div style="text-align:center; padding: 24px; max-width: 380px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">' +
+            '<div style="width:56px; height:56px; margin:0 auto 16px; background:rgba(239,68,68,0.15); border-radius:16px; display:flex; align-items:center; justify-content:center; color:#f87171; font-size:24px;">⚠️</div>' +
+            '<h2 style="font-size:18px; font-weight:800; color:#ffffff; margin:0 0 8px 0;">Kendala Memuat Skrip Aplikasi</h2>' +
+            '<p style="font-size:12px; color:#94a3b8; margin:0 0 20px 0; line-height:1.5;">Halaman mengalami kendala pemuatan skrip/cache. Silakan muat ulang dan bersihkan cache browser.</p>' +
+            '<button onclick="if (\'serviceWorker\' in navigator) { navigator.serviceWorker.getRegistrations().then(function(rs) { Promise.all(rs.map(function(r) { return r.unregister(); })).then(function() { window.location.reload(true); }); }); } else { window.location.reload(true); }" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); color:white; border:none; padding:12px 24px; border-radius:14px; font-weight:800; font-size:13px; cursor:pointer; width:100%;">🔄 Muat Ulang & Hapus Cache</button>' +
+            '</div>';
+        }
+      });
+    </script>
+    <script type="module" crossorigin src="./assets/index-BtKr8Lo4.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DZUkTobN.css">
+  </head>
+  <body style="background-color: #020617; color: #ffffff; margin: 0; min-height: 100vh; overflow-x: hidden;">
+    <!-- HTML Fallback Splash Screen for Instant Native Mobile Experience -->
+    <div id="splash-fallback" onclick="this.remove()" style="position: fixed; inset: 0; z-index: 99999; background: #020617; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; transition: opacity 0.4s ease-out; cursor: pointer;">
+      <div style="position: relative; width: 96px; height: 96px; background: rgba(30, 58, 138, 0.4); border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: 0 0 40px rgba(29, 78, 216, 0.4); animation: pulseLogo 2s infinite ease-in-out;">
+        <img src="./logo.png" alt="Logo" style="width: 60px; height: 60px; object-fit: contain;" onerror="this.style.display='none'" />
+      </div>
+      <h1 style="font-size: 22px; font-weight: 800; letter-spacing: 0.5px; margin: 0 0 6px 0; color: #ffffff; text-align: center;">E-ABSENSI DIGITAL V2.0</h1>
+      <p style="font-size: 13px; color: #60a5fa; margin: 0 0 28px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Aktivasi Terpusat V2.0</p>
+      <div style="width: 160px; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 99px; overflow: hidden; position: relative;">
+        <div style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, #2563eb, #38bdf8); animation: shimmerProgress 1.4s infinite linear;"></div>
+      </div>
+      <p style="font-size: 11px; color: #64748b; margin-top: 14px; font-weight: 500;">Memuat Sistem Absensi Native...</p>
+      <style>
+        @keyframes pulseLogo {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(29, 78, 216, 0.4); }
+          50% { transform: scale(1.06); box-shadow: 0 0 45px rgba(59, 130, 246, 0.7); }
+        }
+        @keyframes shimmerProgress {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
+      </style>
+    </div>
+
+    <script>
+      // Fallback timer: Only remove splash after React mounts, or show recovery option if stuck > 4s
+      setTimeout(function() {
+        if (!window.__reactMounted) {
+          var el = document.getElementById('splash-fallback');
+          if (el) {
+            el.innerHTML = '<div style="text-align:center; padding: 24px; max-width: 360px;">' +
+              '<h2 style="font-size:16px; font-weight:800; color:#60a5fa; margin-bottom:8px;">Memuat Aplikasi...</h2>' +
+              '<p style="font-size:12px; color:#94a3b8; margin-bottom:16px;">Jika halaman belum tampil, silakan tekan tombol di bawah:</p>' +
+              '<button onclick="window.location.reload(true)" style="background:#2563eb; color:white; border:none; padding:10px 20px; border-radius:12px; font-weight:bold; font-size:13px; cursor:pointer;">🔄 Muat Ulang Halaman</button>' +
+              '</div>';
+          }
+        }
+      }, 4000);
+    </script>
+
+    <div id="root"></div>
+
+    <script>
+      // Register Progressive Web App (PWA) Service Worker with automatic update check
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker
+            .register('./sw.js')
+            .then(function (registration) {
+              registration.update();
+            })
+            .catch(function (error) {
+              console.error('[PWA] Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

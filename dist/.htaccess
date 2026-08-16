@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Jika file atau direktori benar-benar ada, layani langsung
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Alihkan semua URL SPA lainnya ke index.html untuk client-side routing
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(png|jpg|jpeg|gif|ico|svg|json)$">
+    Header set Access-Control-Allow-Origin "*"
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+</IfModule>
