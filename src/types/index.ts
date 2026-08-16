@@ -98,6 +98,7 @@ export interface DomainTenantConfig {
   email_sekolah?: string;
   nama_kepala_sekolah?: string;
   nip_kepala_sekolah?: string;
+  firebase_config?: FirebaseAppConfig;
 }
 
 export interface FirebaseAppConfig {

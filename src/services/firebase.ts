@@ -1,5 +1,5 @@
-// Firebase Integration Service for E-Absensi Digital V2.0
-// Supports Firestore & Realtime Database sync across multi-devices & browsers
+// Firebase Multi-Tenant Integration Service for E-Absensi Digital V2.0
+// Supports Firestore & Realtime Database per Domain / School Tenant
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import {
@@ -11,11 +11,10 @@ import {
   collection,
   Firestore,
 } from 'firebase/firestore';
-import { FirebaseAppConfig } from '../types';
+import { FirebaseAppConfig, AppConfig, DomainTenantConfig } from '../types';
 
 const FIREBASE_STORAGE_KEY = 'e_absensi_firebase_config';
 
-// Default Demo Firebase Config Structure
 export const DEFAULT_FIREBASE_CONFIG: FirebaseAppConfig = {
   enabled: false,
   apiKey: '',
@@ -27,84 +26,150 @@ export const DEFAULT_FIREBASE_CONFIG: FirebaseAppConfig = {
   databaseURL: '',
 };
 
-let cachedApp: FirebaseApp | null = null;
-let cachedDb: Firestore | null = null;
+let cachedAppMap: Record<string, FirebaseApp> = {};
+let cachedDbMap: Record<string, Firestore> = {};
 let unsubscribeListeners: (() => void)[] = [];
 
-export function getFirebaseConfig(): FirebaseAppConfig {
+// Helper to get active domain slug for isolation
+export function getActiveDomainSlug(overrideDomain?: string): string {
+  if (typeof window === 'undefined') return 'default';
+  
+  if (overrideDomain && overrideDomain.trim()) {
+    return overrideDomain.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+  }
+
+  const testingDomain = localStorage.getItem('e_absensi_testing_domain');
+  if (testingDomain && testingDomain.trim()) {
+    return testingDomain.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+  }
+
+  const hostname = window.location.hostname.toLowerCase().trim();
+  const searchParams = new URLSearchParams(window.location.search);
+  const paramDomain = (searchParams.get('domain') || searchParams.get('tenant') || '').toLowerCase().trim();
+  
+  const target = paramDomain || hostname || 'default';
+  return target.replace(/[^a-z0-9]/g, '_');
+}
+
+export function getFirebaseConfig(domain?: string): FirebaseAppConfig {
   if (typeof window !== 'undefined') {
     try {
+      // 1. Check if specific domain tenant config has its own custom Firebase config
+      const appConfigRaw = localStorage.getItem('e_absensi_config_v1');
+      if (appConfigRaw) {
+        const appConfig: AppConfig = JSON.parse(appConfigRaw);
+        if (appConfig.domain_tenants && Array.isArray(appConfig.domain_tenants)) {
+          const targetDomain = domain || window.location.hostname;
+          const tenant = appConfig.domain_tenants.find((t: DomainTenantConfig) => 
+            t.domain && (t.domain.toLowerCase().trim() === targetDomain.toLowerCase().trim() || targetDomain.toLowerCase().includes(t.domain.toLowerCase().trim()))
+          );
+          if (tenant && tenant.firebase_config && tenant.firebase_config.apiKey) {
+            return { ...DEFAULT_FIREBASE_CONFIG, ...tenant.firebase_config };
+          }
+        }
+      }
+
+      // 2. Global fallback config
       const stored = localStorage.getItem(FIREBASE_STORAGE_KEY);
       if (stored) {
         return { ...DEFAULT_FIREBASE_CONFIG, ...JSON.parse(stored) };
       }
     } catch (e) {
-      console.warn('[Firebase] Error reading config from storage:', e);
+      console.warn('[Firebase Multi-Tenant] Error reading config from storage:', e);
     }
   }
   return DEFAULT_FIREBASE_CONFIG;
 }
 
-export function saveFirebaseConfig(cfg: FirebaseAppConfig): void {
+export function saveFirebaseConfig(cfg: FirebaseAppConfig, domain?: string): void {
   if (typeof window === 'undefined') return;
   try {
+    if (domain) {
+      // Save specific to domain tenant
+      const appConfigRaw = localStorage.getItem('e_absensi_config_v1');
+      if (appConfigRaw) {
+        const appConfig: AppConfig = JSON.parse(appConfigRaw);
+        if (appConfig.domain_tenants && Array.isArray(appConfig.domain_tenants)) {
+          appConfig.domain_tenants = appConfig.domain_tenants.map((t) => {
+            if (t.domain && t.domain.toLowerCase().trim() === domain.toLowerCase().trim()) {
+              return { ...t, firebase_config: cfg };
+            }
+            return t;
+          });
+          localStorage.setItem('e_absensi_config_v1', JSON.stringify(appConfig));
+        }
+      }
+    }
+
+    // Also save as global default config
     localStorage.setItem(FIREBASE_STORAGE_KEY, JSON.stringify(cfg));
-    // Reset cached instances on config change
-    cachedApp = null;
-    cachedDb = null;
-    initFirebase();
+    cachedAppMap = {};
+    cachedDbMap = {};
+    initFirebase(domain);
   } catch (e) {
-    console.error('[Firebase] Error saving config:', e);
+    console.error('[Firebase Multi-Tenant] Error saving config:', e);
   }
 }
 
-export function initFirebase(): { app: FirebaseApp | null; db: Firestore | null } {
-  const config = getFirebaseConfig();
+export function initFirebase(domain?: string): { app: FirebaseApp | null; db: Firestore | null } {
+  const config = getFirebaseConfig(domain);
+  const domainKey = domain || getActiveDomainSlug();
 
   if (!config.enabled || !config.apiKey || !config.projectId) {
     return { app: null, db: null };
   }
 
   try {
-    if (!cachedApp) {
-      if (getApps().length > 0) {
-        cachedApp = getApp();
+    if (!cachedAppMap[domainKey]) {
+      const appName = `app_${domainKey}`;
+      const existingApps = getApps();
+      const found = existingApps.find((a) => a.name === appName);
+      
+      if (found) {
+        cachedAppMap[domainKey] = found;
       } else {
-        cachedApp = initializeApp({
-          apiKey: config.apiKey,
-          authDomain: config.authDomain || `${config.projectId}.firebaseapp.com`,
-          projectId: config.projectId,
-          storageBucket: config.storageBucket || `${config.projectId}.appspot.com`,
-          messagingSenderId: config.messagingSenderId,
-          appId: config.appId,
-          databaseURL: config.databaseURL || `https://${config.projectId}-default-rtdb.firebaseio.com`,
-        });
+        cachedAppMap[domainKey] = initializeApp(
+          {
+            apiKey: config.apiKey,
+            authDomain: config.authDomain || `${config.projectId}.firebaseapp.com`,
+            projectId: config.projectId,
+            storageBucket: config.storageBucket || `${config.projectId}.appspot.com`,
+            messagingSenderId: config.messagingSenderId,
+            appId: config.appId,
+            databaseURL: config.databaseURL || `https://${config.projectId}-default-rtdb.firebaseio.com`,
+          },
+          appName
+        );
       }
     }
 
-    if (!cachedDb && cachedApp) {
-      cachedDb = getFirestore(cachedApp);
+    if (!cachedDbMap[domainKey] && cachedAppMap[domainKey]) {
+      cachedDbMap[domainKey] = getFirestore(cachedAppMap[domainKey]);
     }
 
-    return { app: cachedApp, db: cachedDb };
+    return { app: cachedAppMap[domainKey], db: cachedDbMap[domainKey] };
   } catch (err) {
-    console.error('[Firebase] Initialization error:', err);
+    console.error(`[Firebase Multi-Tenant] Initialization error for domain ${domainKey}:`, err);
     return { app: null, db: null };
   }
 }
 
-export async function checkFirebaseConnection(): Promise<{
+export async function checkFirebaseConnection(domain?: string): Promise<{
   success: boolean;
   enabled: boolean;
   message: string;
   projectId?: string;
+  domainSlug?: string;
 }> {
-  const config = getFirebaseConfig();
+  const config = getFirebaseConfig(domain);
+  const domainSlug = getActiveDomainSlug(domain);
+
   if (!config.enabled) {
     return {
       success: false,
       enabled: false,
-      message: 'Firebase belum diaktifkan di Pengaturan Developer.',
+      message: `Firebase belum diaktifkan untuk domain ${domainSlug}.`,
+      domainSlug,
     };
   }
 
@@ -112,64 +177,76 @@ export async function checkFirebaseConnection(): Promise<{
     return {
       success: false,
       enabled: true,
-      message: 'Kunci API Key & Project ID Firebase belum diisi secara lengkap.',
+      message: `API Key & Project ID Firebase belum diisi untuk domain ${domainSlug}.`,
+      domainSlug,
     };
   }
 
   try {
-    const { db } = initFirebase();
+    const { db } = initFirebase(domain);
     if (!db) {
       return {
         success: false,
         enabled: true,
-        message: 'Gagal menginisialisasi modul Firebase Firestore.',
+        message: `Gagal menginisialisasi modul Firebase Firestore untuk domain ${domainSlug}.`,
+        domainSlug,
       };
     }
 
-    // Ping test by reading/writing heartbeats collection
-    const pingRef = doc(db, 'system', 'status');
-    await setDoc(pingRef, { lastPing: new Date().toISOString(), status: 'online' }, { merge: true });
+    // Ping test into tenant-isolated heartbeat path
+    const pingRef = doc(db, 'tenants', domainSlug, 'system', 'status');
+    await setDoc(pingRef, { lastPing: new Date().toISOString(), status: 'online', domain: domainSlug }, { merge: true });
 
     return {
       success: true,
       enabled: true,
-      message: `Terhubung - Firebase Firestore (Project: ${config.projectId}) Online`,
+      message: `Terhubung - Firestore Domain [${domainSlug}] (Project: ${config.projectId}) Online`,
       projectId: config.projectId,
+      domainSlug,
     };
   } catch (err: any) {
     return {
       success: false,
       enabled: true,
-      message: `Error Koneksi Firebase: ${err?.message || 'Gagal terhubung ke server Firebase'}`,
+      message: `Error Koneksi Firebase Domain [${domainSlug}]: ${err?.message || 'Gagal terhubung'}`,
       projectId: config.projectId,
+      domainSlug,
     };
   }
 }
 
-// Write document to Firestore collection
-export async function setFirebaseData(collectionName: string, docId: string, data: any): Promise<boolean> {
+// Write document to Domain Tenant isolated Firestore path: tenants/{domain_slug}/{collectionName}/{docId}
+export async function setFirebaseData(
+  collectionName: string,
+  docId: string,
+  data: any,
+  domain?: string
+): Promise<boolean> {
   try {
-    const { db } = initFirebase();
+    const domainSlug = getActiveDomainSlug(domain);
+    const { db } = initFirebase(domain);
     if (!db) return false;
 
-    const docRef = doc(db, collectionName, docId);
-    await setDoc(docRef, { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+    // Multi-Tenant Isolation Path: tenants/{domainSlug}/{collectionName}/{docId}
+    const docRef = doc(db, 'tenants', domainSlug, collectionName, docId);
+    await setDoc(docRef, { ...data, tenantDomain: domainSlug, updatedAt: new Date().toISOString() }, { merge: true });
     return true;
   } catch (err) {
-    console.warn(`[Firebase] Error writing to ${collectionName}/${docId}:`, err);
+    console.warn(`[Firebase Multi-Tenant] Error writing to tenants/${collectionName}/${docId}:`, err);
     return false;
   }
 }
 
-// Real-time listener for Firestore collection changes across all devices
+// Real-time listener for Domain Tenant isolated Firestore collection changes
 export function setupFirebaseRealtimeListeners(
-  onDataSync: (key: string, data: any) => void
+  onDataSync: (key: string, data: any) => void,
+  domain?: string
 ): () => void {
-  // Clear previous listeners if any
   unsubscribeListeners.forEach((unsub) => unsub());
   unsubscribeListeners = [];
 
-  const { db } = initFirebase();
+  const domainSlug = getActiveDomainSlug(domain);
+  const { db } = initFirebase(domain);
   if (!db) return () => {};
 
   const collectionsToListen = ['siswa', 'guru', 'absensi', 'absensi_guru', 'libur', 'config'];
@@ -177,7 +254,7 @@ export function setupFirebaseRealtimeListeners(
   collectionsToListen.forEach((colName) => {
     try {
       const unsub = onSnapshot(
-        collection(db, colName),
+        collection(db, 'tenants', domainSlug, colName),
         (snapshot) => {
           snapshot.docChanges().forEach((change) => {
             if (change.type === 'added' || change.type === 'modified') {
@@ -186,12 +263,12 @@ export function setupFirebaseRealtimeListeners(
           });
         },
         (error) => {
-          console.warn(`[Firebase] Listener error on collection ${colName}:`, error);
+          console.warn(`[Firebase Multi-Tenant] Listener error on ${domainSlug}/${colName}:`, error);
         }
       );
       unsubscribeListeners.push(unsub);
     } catch (e) {
-      console.warn(`[Firebase] Failed to attach listener for ${colName}:`, e);
+      console.warn(`[Firebase Multi-Tenant] Failed to attach listener for ${domainSlug}/${colName}:`, e);
     }
   });
 

@@ -14,7 +14,7 @@ import {
   deleteRegisteredLicense,
   toggleRegisteredLicenseStatus
 } from '../services/activation';
-import { getFirebaseConfig, saveFirebaseConfig, checkFirebaseConnection } from '../services/firebase';
+import { getFirebaseConfig, saveFirebaseConfig, checkFirebaseConnection, getActiveDomainSlug } from '../services/firebase';
 import { AppConfig, DomainTenantConfig, FirebaseAppConfig } from '../types';
 
 interface PengaturanDeveloperModalProps {
@@ -1218,6 +1218,22 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
                   }`}>
                     {fbConfig.enabled ? '🟢 Fitur Aktif' : '⚪ Dinonaktifkan'}
                   </span>
+                </div>
+
+                {/* Multi-Tenant Per-Domain Info Banner */}
+                <div className="p-4 bg-slate-900 text-white rounded-xl space-y-2 border border-slate-800">
+                  <div className="flex items-center justify-between text-xs font-bold text-amber-400">
+                    <span className="flex items-center gap-1.5">
+                      <Globe className="w-4 h-4 text-amber-400" />
+                      <span>Firebase Database Multi-Tenant per Domain Sekolah</span>
+                    </span>
+                    <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-mono">
+                      Path: tenants/{getActiveDomainSlug(activeTestingDomain || undefined)}/*
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    Setiap domain sekolah yang terhubung memiliki lingkungan database Firebase terisolasi di path <code className="bg-slate-800 text-amber-300 px-1 py-0.5 rounded font-mono">tenants/&lt;domain_slug&gt;/</code>. Anda dapat mengaktifkan project Firebase tersendiri untuk masing-masing domain sekolah di bawah ini.
+                  </p>
                 </div>
 
                 {/* Enable Switch */}
