@@ -17,6 +17,7 @@ const CONFIG_PATH = path.join(process.cwd(), 'app-config.json');
 // Default school configuration
 const DEFAULT_CONFIG = {
   nama_sekolah: 'SMA NEGERI',
+  judul_aplikasi: 'Absensi',
   npsn: '10101234',
   alamat_sekolah: 'Jl. Perintis Kemerdekaan No. 1, Lhoksukon, Aceh Utara',
   telepon_sekolah: '(0645) 91234',
@@ -68,6 +69,7 @@ function readServerConfig(reqHost?: string, queryDomain?: string) {
         return {
           ...cfg,
           nama_sekolah: matched.nama_sekolah || cfg.nama_sekolah,
+          judul_aplikasi: matched.judul_aplikasi || cfg.judul_aplikasi || 'Absensi',
           logo_url: matched.logo_url || cfg.logo_url,
           favicon_url: matched.favicon_url || matched.logo_url || cfg.favicon_url,
           alamat_sekolah: matched.alamat_sekolah || cfg.alamat_sekolah,
@@ -348,9 +350,13 @@ function injectOpenGraphMeta(html: string, req: express.Request): string {
     ? cfg.nama_sekolah.trim() 
     : 'SMA NEGERI';
 
+  const appTitle = cfg.judul_aplikasi && cfg.judul_aplikasi.trim() !== ''
+    ? cfg.judul_aplikasi.trim()
+    : 'Absensi';
+
   const alamat = cfg.alamat_sekolah ? ` Alamat: ${cfg.alamat_sekolah}` : '';
-  const title = `E-Absensi ${schoolName}`;
-  const description = `Sistem Absensi Digital, Presensi QR Code & GPS ${schoolName}.${alamat}`;
+  const title = `${appTitle} - ${schoolName}`;
+  const description = `Sistem ${appTitle} Digital, Presensi QR Code & GPS ${schoolName}.${alamat}`;
 
   // Image URL resolution
   let imageUrl = '/logo.png';

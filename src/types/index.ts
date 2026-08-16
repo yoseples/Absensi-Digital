@@ -91,6 +91,7 @@ export interface DomainTenantConfig {
   id: string;
   domain: string; // e.g. "sma1.sch.id", "sma2.sch.id", "sma3.sch.id"
   nama_sekolah: string;
+  judul_aplikasi?: string; // custom title prefix for browser tab e.g. "Absensi"
   logo_url?: string;
   favicon_url?: string;
   alamat_sekolah?: string;
@@ -123,6 +124,7 @@ export interface SupabaseAppConfig {
 
 export interface AppConfig {
   nama_sekolah: string;
+  judul_aplikasi?: string; // custom title prefix for browser tab (default: "Absensi") e.g. "Absensi - SMAN 1"
   npsn?: string;
   alamat_sekolah?: string;
   telepon_sekolah?: string;

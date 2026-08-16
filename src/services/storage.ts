@@ -36,6 +36,7 @@ export function getTenantStorageKey(baseKey: string, overrideDomain?: string): s
 
 export const DEFAULT_CONFIG: AppConfig = {
   nama_sekolah: 'SMA NEGERI',
+  judul_aplikasi: 'Absensi',
   npsn: '10101234',
   alamat_sekolah: 'Jl. Perintis Kemerdekaan No. 1, Lhoksukon, Aceh Utara',
   telepon_sekolah: '(0645) 91234',
@@ -1018,6 +1019,7 @@ export function getAppConfig(overrideDomain?: string): AppConfig {
             return {
               ...cfg,
               nama_sekolah: matched.nama_sekolah || cfg.nama_sekolah,
+              judul_aplikasi: matched.judul_aplikasi || cfg.judul_aplikasi || 'Absensi',
               logo_url: matched.logo_url || cfg.logo_url,
               favicon_url: matched.favicon_url || matched.logo_url || cfg.favicon_url,
               alamat_sekolah: matched.alamat_sekolah || cfg.alamat_sekolah,
@@ -1060,8 +1062,12 @@ export function applyAppMetaData(cfg?: AppConfig) {
   if (typeof document === 'undefined') return;
   const config = cfg || getAppConfig();
   const schoolName = config.nama_sekolah && config.nama_sekolah.trim() !== '' 
-    ? config.nama_sekolah 
+    ? config.nama_sekolah.trim() 
     : 'SMA NEGERI';
+
+  const appTitle = config.judul_aplikasi && config.judul_aplikasi.trim() !== ''
+    ? config.judul_aplikasi.trim()
+    : 'Absensi';
   
   const rawLogo = config.logo_url && config.logo_url.trim() !== '' 
     ? config.logo_url 
@@ -1085,8 +1091,8 @@ export function applyAppMetaData(cfg?: AppConfig) {
   }
 
   const alamat = config.alamat_sekolah ? ` Alamat: ${config.alamat_sekolah}` : '';
-  const description = `Sistem Absensi Digital, Presensi QR Code & GPS ${schoolName}.${alamat}`;
-  const title = `E-Absensi ${schoolName}`;
+  const description = `Sistem ${appTitle} Digital, Presensi QR Code & GPS ${schoolName}.${alamat}`;
+  const title = `${appTitle} - ${schoolName}`;
 
   // Update document title
   document.title = title;

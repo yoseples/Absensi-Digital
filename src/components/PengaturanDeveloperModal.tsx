@@ -312,6 +312,34 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Judul Aplikasi Setting */}
+                  <div className="md:col-span-2 p-4 bg-amber-50/80 rounded-2xl border border-amber-200/90 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-amber-950 uppercase tracking-wider flex items-center gap-1.5">
+                        <Globe className="w-4 h-4 text-amber-600" />
+                        <span>Judul Aplikasi (Tampil di Tab Browser)</span>
+                      </label>
+                      <span className="text-[10px] font-mono font-bold text-amber-800 bg-amber-200/70 px-2 py-0.5 rounded-full">
+                        Format: [Judul] - [Nama Sekolah]
+                      </span>
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        value={config.judul_aplikasi !== undefined ? config.judul_aplikasi : 'Absensi'}
+                        onChange={(e) => handleChange('judul_aplikasi', e.target.value)}
+                        placeholder="Contoh: Absensi (atau E-Presensi, SIAKAD, dll)"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white focus:ring-2 focus:ring-amber-500 text-sm font-semibold text-slate-900"
+                      />
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] text-amber-900/90 bg-amber-100/60 p-2.5 rounded-xl border border-amber-200/60">
+                      <span>🌐 <b>Pratinjau Tab Browser:</b></span>
+                      <span className="font-mono font-bold text-amber-950 bg-white px-2.5 py-1 rounded border border-amber-300 text-xs shadow-2xs">
+                        {(config.judul_aplikasi && config.judul_aplikasi.trim() ? config.judul_aplikasi.trim() : 'Absensi')} - {(config.nama_sekolah && config.nama_sekolah.trim() ? config.nama_sekolah.trim() : 'Nama Sekolah')}
+                      </span>
+                    </div>
+                  </div>
+
                   <div className="md:col-span-2">
                     <label className="block text-xs font-bold text-slate-700 mb-1">Nama Sekolah / Instansi *</label>
                     <input
@@ -557,10 +585,10 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
                           {typeof window !== 'undefined' ? window.location.hostname : 'sekolah.sch.id'}
                         </div>
                         <div className="text-xs font-bold text-slate-900 line-clamp-1">
-                          E-Absensi {config.nama_sekolah || 'SMA NEGERI'}
+                          {(config.judul_aplikasi && config.judul_aplikasi.trim() ? config.judul_aplikasi.trim() : 'Absensi')} - {config.nama_sekolah || 'SMA NEGERI'}
                         </div>
                         <div className="text-[11px] text-slate-600 line-clamp-2 leading-snug">
-                          Sistem Absensi Digital, Presensi QR Code & GPS {config.nama_sekolah || 'SMA NEGERI'}.{config.alamat_sekolah ? ` Alamat: ${config.alamat_sekolah}` : ''}
+                          Sistem {(config.judul_aplikasi && config.judul_aplikasi.trim() ? config.judul_aplikasi.trim() : 'Absensi')} Digital, Presensi QR Code & GPS {config.nama_sekolah || 'SMA NEGERI'}.{config.alamat_sekolah ? ` Alamat: ${config.alamat_sekolah}` : ''}
                         </div>
                       </div>
                     </div>
