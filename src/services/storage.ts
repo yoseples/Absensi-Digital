@@ -700,8 +700,10 @@ export async function syncPullFromServer(): Promise<boolean> {
 
     const setItemIfChanged = (key: string, newData: any) => {
       const newStr = JSON.stringify(newData);
-      const oldStr = localStorage.getItem(key);
+      const tenantKey = getTenantStorageKey(key);
+      const oldStr = localStorage.getItem(tenantKey) || localStorage.getItem(key);
       if (newStr !== oldStr) {
+        localStorage.setItem(tenantKey, newStr);
         localStorage.setItem(key, newStr);
         changed = true;
       }
@@ -826,7 +828,9 @@ export async function checkServerUpdates() {
 // System Logs Storage Accessors
 export function getSystemLogs(): SystemLog[] {
   try {
-    return JSON.parse(localStorage.getItem(KEYS.LOGS) || '[]');
+    const tenantKey = getTenantStorageKey(KEYS.LOGS);
+    const raw = localStorage.getItem(tenantKey) || localStorage.getItem(KEYS.LOGS);
+    return JSON.parse(raw || '[]');
   } catch {
     return [];
   }
@@ -849,12 +853,16 @@ export function addSystemLog(log: Omit<SystemLog, 'id' | 'timestamp'>): SystemLo
 
   // Keep maximum 500 recent logs
   const updatedLogs = [newLog, ...logs].slice(0, 500);
+  const tenantKey = getTenantStorageKey(KEYS.LOGS);
+  localStorage.setItem(tenantKey, JSON.stringify(updatedLogs));
   localStorage.setItem(KEYS.LOGS, JSON.stringify(updatedLogs));
   syncPushToServer('logs', updatedLogs);
   return newLog;
 }
 
 export function clearSystemLogs(): void {
+  const tenantKey = getTenantStorageKey(KEYS.LOGS);
+  localStorage.setItem(tenantKey, JSON.stringify([]));
   localStorage.setItem(KEYS.LOGS, JSON.stringify([]));
   syncPushToServer('logs', []);
 }
@@ -862,6 +870,8 @@ export function clearSystemLogs(): void {
 // Function to clear browser cache, notifications cache, temporary storage & refresh dynamic metadata
 export function clearAppCache(): void {
   try {
+    const tenantKey = getTenantStorageKey(KEYS.NOTIFICATIONS_READ);
+    localStorage.removeItem(tenantKey);
     localStorage.removeItem(KEYS.NOTIFICATIONS_READ);
   } catch (e) {}
 
@@ -1242,6 +1252,8 @@ export function saveAppConfig(cfg: AppConfig, overrideDomain?: string) {
 }
 
 export function resetAppConfig(): AppConfig {
+  const tenantKey = getTenantStorageKey(KEYS.CONFIG);
+  localStorage.setItem(tenantKey, JSON.stringify(DEFAULT_CONFIG));
   localStorage.setItem(KEYS.CONFIG, JSON.stringify(DEFAULT_CONFIG));
   applyAppMetaData(DEFAULT_CONFIG);
   syncPushToServer('config', DEFAULT_CONFIG);
@@ -2245,7 +2257,9 @@ export function getStudentAbsenceSummaries(filterKelas?: string | null): Student
 
 export function getAbsensiGuruList(): AbsensiGuruRecord[] {
   try {
-    const list = JSON.parse(localStorage.getItem(KEYS.ABSENSI_GURU) || '[]');
+    const tenantKey = getTenantStorageKey(KEYS.ABSENSI_GURU);
+    const raw = localStorage.getItem(tenantKey) || localStorage.getItem(KEYS.ABSENSI_GURU);
+    const list = JSON.parse(raw || '[]');
     if (Array.isArray(list)) {
       return list.map((r: any) => ({
         id: String(r.id || Date.now()),
@@ -2270,6 +2284,8 @@ export function getAbsensiGuruList(): AbsensiGuruRecord[] {
 }
 
 export function saveAbsensiGuruList(list: AbsensiGuruRecord[]) {
+  const tenantKey = getTenantStorageKey(KEYS.ABSENSI_GURU);
+  localStorage.setItem(tenantKey, JSON.stringify(list));
   localStorage.setItem(KEYS.ABSENSI_GURU, JSON.stringify(list));
   notifyDataChanged('absensiGuru', list);
 }
@@ -2469,7 +2485,8 @@ export function doTeacherCheckOut(
 // Notifications Helper Functions
 export function getReadNotificationIds(): string[] {
   try {
-    const data = localStorage.getItem(KEYS.NOTIFICATIONS_READ);
+    const tenantKey = getTenantStorageKey(KEYS.NOTIFICATIONS_READ);
+    const data = localStorage.getItem(tenantKey) || localStorage.getItem(KEYS.NOTIFICATIONS_READ);
     return data ? JSON.parse(data) : [];
   } catch {
     return [];
@@ -2480,6 +2497,8 @@ export function markNotificationAsRead(id: string): void {
   const readIds = getReadNotificationIds();
   if (!readIds.includes(id)) {
     readIds.push(id);
+    const tenantKey = getTenantStorageKey(KEYS.NOTIFICATIONS_READ);
+    localStorage.setItem(tenantKey, JSON.stringify(readIds));
     localStorage.setItem(KEYS.NOTIFICATIONS_READ, JSON.stringify(readIds));
   }
 }
@@ -2487,10 +2506,14 @@ export function markNotificationAsRead(id: string): void {
 export function markAllNotificationsAsRead(ids: string[]): void {
   const readIds = getReadNotificationIds();
   const merged = Array.from(new Set([...readIds, ...ids]));
+  const tenantKey = getTenantStorageKey(KEYS.NOTIFICATIONS_READ);
+  localStorage.setItem(tenantKey, JSON.stringify(merged));
   localStorage.setItem(KEYS.NOTIFICATIONS_READ, JSON.stringify(merged));
 }
 
 export function clearReadNotifications(): void {
+  const tenantKey = getTenantStorageKey(KEYS.NOTIFICATIONS_READ);
+  localStorage.removeItem(tenantKey);
   localStorage.removeItem(KEYS.NOTIFICATIONS_READ);
 }
 
