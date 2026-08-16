@@ -56,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'view-kelola-absen', label: 'Kelola Absen', icon: CalendarDays },
         { id: 'view-scanner', label: 'Scan Absensi', icon: QrCode },
         { id: 'open-dev-settings', label: 'Pengaturan Sekolah', icon: Settings },
-        { id: 'open-mysql-modal', label: 'Database MySQL (cPanel)', icon: Database },
+        { id: 'open-mysql-modal', label: 'Database', icon: Database },
         { id: 'view-system-logs', label: 'Log Sistem & Audit', icon: ShieldAlert },
         { id: 'view-aktivasi-keygenerator', label: 'Aktivasi & Key Generator', icon: KeyRound },
       ];

@@ -573,10 +573,10 @@ export const DashboardAdmin: React.FC<DashboardAdminProps> = ({ onNavigate, onSh
                     </div>
                     <div>
                       <div className="font-bold text-xs text-indigo-950 flex items-center gap-1.5">
-                        <span>Database MySQL (cPanel)</span>
+                        <span>Database</span>
                         <span className="px-1.5 py-0.5 bg-amber-500 text-slate-950 text-[9px] font-extrabold uppercase rounded">Developer</span>
                       </div>
-                      <div className="text-[10px] text-indigo-700">Konfigurasi hosting & endpoint PHP</div>
+                      <div className="text-[10px] text-indigo-700">Firebase, Supabase & MySQL cPanel</div>
                     </div>
                   </button>
                 </>

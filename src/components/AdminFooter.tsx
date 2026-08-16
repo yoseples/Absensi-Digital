@@ -170,15 +170,15 @@ export function AdminFooter({ currentUser, onOpenMysqlModal, onShowToast }: Admi
               <span>Diagnostik</span>
             </button>
 
-            {/* MySQL Setup Modal Button for Developer */}
+            {/* Database Setup Modal Button for Developer */}
             {currentUser.role === 'developer' && onOpenMysqlModal && (
               <button
                 onClick={onOpenMysqlModal}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-md text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-medium transition-colors"
-                title="Buka Pengaturan URL MySQL cPanel"
+                title="Buka Pengaturan Database (Firebase, Supabase, MySQL)"
               >
                 <Settings className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Konfig MySQL</span>
+                <span className="hidden sm:inline">Database</span>
               </button>
             )}
 
