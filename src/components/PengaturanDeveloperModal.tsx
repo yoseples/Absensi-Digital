@@ -194,6 +194,10 @@ export const PengaturanDeveloperModal: React.FC<PengaturanDeveloperModalProps> =
                 }`}>
                   {isDeveloper ? 'Developer Panel' : 'Akses Admin'}
                 </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-amber-300 border border-slate-700 hidden sm:flex items-center gap-1">
+                  <Globe className="w-3 h-3 text-amber-400" />
+                  <span>Domain: {config.active_domain || getActiveDomainSlug(activeTestingDomain || undefined)}</span>
+                </span>
               </div>
               <p className="text-xs text-slate-400">
                 {isDeveloper

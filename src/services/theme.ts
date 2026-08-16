@@ -1,16 +1,29 @@
-// Automatic Dark Mode Service
-// Auto switches theme based on local time:
-// Day (06:00 - 17:59) -> Light Mode
-// Night (18:00 - 05:59) -> Dark Mode
-// Supports user override: 'auto' | 'light' | 'dark'
+// Automatic Dark Mode Service (Multi-Tenant Per-Domain Isolated)
+// Auto switches theme based on local time or user override per domain: 'auto' | 'light' | 'dark'
 
 export type ThemeMode = 'auto' | 'light' | 'dark';
 
 const THEME_STORAGE_KEY = 'e_absensi_theme_mode';
 
-export function getThemeMode(): ThemeMode {
+function getDomainThemeKey(domain?: string): string {
+  if (typeof window === 'undefined') return THEME_STORAGE_KEY;
+  const testingDomain = domain || localStorage.getItem('e_absensi_testing_domain');
+  if (testingDomain && testingDomain.trim()) {
+    const slug = testingDomain.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+    return `${slug}:${THEME_STORAGE_KEY}`;
+  }
+  const hostname = window.location.hostname.toLowerCase().trim();
+  if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+    const slug = hostname.replace(/[^a-z0-9]/g, '_');
+    return `${slug}:${THEME_STORAGE_KEY}`;
+  }
+  return THEME_STORAGE_KEY;
+}
+
+export function getThemeMode(domain?: string): ThemeMode {
   try {
-    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    const key = getDomainThemeKey(domain);
+    const saved = localStorage.getItem(key) || localStorage.getItem(THEME_STORAGE_KEY);
     if (saved === 'light' || saved === 'dark' || saved === 'auto') {
       return saved as ThemeMode;
     }
@@ -53,8 +66,10 @@ export function applyTheme(mode: ThemeMode = getThemeMode()): { effectiveTheme: 
   };
 }
 
-export function setThemeMode(mode: ThemeMode): { effectiveTheme: 'dark' | 'light'; isAuto: boolean; isNight: boolean } {
+export function setThemeMode(mode: ThemeMode, domain?: string): { effectiveTheme: 'dark' | 'light'; isAuto: boolean; isNight: boolean } {
   try {
+    const key = getDomainThemeKey(domain);
+    localStorage.setItem(key, mode);
     localStorage.setItem(THEME_STORAGE_KEY, mode);
   } catch (e) {
     console.warn('Unable to save theme mode to localStorage', e);

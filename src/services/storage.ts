@@ -15,6 +15,25 @@ const KEYS = {
   NOTIFICATIONS_READ: 'e_absensi_notif_read_v1',
 };
 
+export function getTenantStorageKey(baseKey: string, overrideDomain?: string): string {
+  if (typeof window === 'undefined') return baseKey;
+  const testingDomain = overrideDomain || localStorage.getItem('e_absensi_testing_domain');
+  if (testingDomain && testingDomain.trim()) {
+    const slug = testingDomain.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+    return `${slug}:${baseKey}`;
+  }
+  const hostname = window.location.hostname.toLowerCase().trim();
+  const searchParams = new URLSearchParams(window.location.search);
+  const paramDomain = (searchParams.get('domain') || searchParams.get('tenant') || '').toLowerCase().trim();
+
+  const target = paramDomain || hostname || 'default';
+  const slug = target.replace(/[^a-z0-9]/g, '_');
+  if (slug === 'localhost' || slug === '127_0_0_1' || slug === 'default') {
+    return baseKey;
+  }
+  return `${slug}:${baseKey}`;
+}
+
 export const DEFAULT_CONFIG: AppConfig = {
   nama_sekolah: 'SMA NEGERI',
   npsn: '10101234',
@@ -881,12 +900,13 @@ export function clearAppCache(): void {
 // Ensure storage is seeded on module load
 initStorage();
 
-// Storage Accessors
+// Storage Accessors (Partitioned Per Tenant Domain)
 export function getSiswaList(): Siswa[] {
   try {
-    const raw = localStorage.getItem(KEYS.SISWA);
+    const tenantKey = getTenantStorageKey(KEYS.SISWA);
+    const raw = localStorage.getItem(tenantKey) || localStorage.getItem(KEYS.SISWA);
     if (!raw) {
-      localStorage.setItem(KEYS.SISWA, JSON.stringify(INITIAL_SISWA));
+      localStorage.setItem(tenantKey, JSON.stringify(INITIAL_SISWA));
       return INITIAL_SISWA;
     }
     const list = JSON.parse(raw);
@@ -916,15 +936,18 @@ export function getSiswaList(): Siswa[] {
 }
 
 export function saveSiswaList(list: Siswa[]) {
+  const tenantKey = getTenantStorageKey(KEYS.SISWA);
+  localStorage.setItem(tenantKey, JSON.stringify(list));
   localStorage.setItem(KEYS.SISWA, JSON.stringify(list));
   notifyDataChanged('siswa', list);
 }
 
 export function getGuruList(): Guru[] {
   try {
-    const raw = localStorage.getItem(KEYS.GURU);
+    const tenantKey = getTenantStorageKey(KEYS.GURU);
+    const raw = localStorage.getItem(tenantKey) || localStorage.getItem(KEYS.GURU);
     if (!raw) {
-      localStorage.setItem(KEYS.GURU, JSON.stringify(INITIAL_GURU));
+      localStorage.setItem(tenantKey, JSON.stringify(INITIAL_GURU));
       return INITIAL_GURU;
     }
     const list = JSON.parse(raw);
@@ -948,19 +971,25 @@ export function getGuruList(): Guru[] {
 }
 
 export function saveGuruList(list: Guru[]) {
+  const tenantKey = getTenantStorageKey(KEYS.GURU);
+  localStorage.setItem(tenantKey, JSON.stringify(list));
   localStorage.setItem(KEYS.GURU, JSON.stringify(list));
   notifyDataChanged('guru', list);
 }
 
 export function getHariLiburList(): HariLibur[] {
   try {
-    return JSON.parse(localStorage.getItem(KEYS.LIBUR) || '[]');
+    const tenantKey = getTenantStorageKey(KEYS.LIBUR);
+    const raw = localStorage.getItem(tenantKey) || localStorage.getItem(KEYS.LIBUR);
+    return JSON.parse(raw || '[]');
   } catch {
     return INITIAL_LIBUR;
   }
 }
 
 export function saveHariLiburList(list: HariLibur[]) {
+  const tenantKey = getTenantStorageKey(KEYS.LIBUR);
+  localStorage.setItem(tenantKey, JSON.stringify(list));
   localStorage.setItem(KEYS.LIBUR, JSON.stringify(list));
   notifyDataChanged('libur', list);
 }
@@ -981,9 +1010,10 @@ export function setActiveTestingDomain(domain: string | null): void {
   applyAppMetaData();
 }
 
-export function getAppConfig(): AppConfig {
+export function getAppConfig(overrideDomain?: string): AppConfig {
   try {
-    const stored = localStorage.getItem(KEYS.CONFIG);
+    const tenantKey = getTenantStorageKey(KEYS.CONFIG, overrideDomain);
+    const stored = localStorage.getItem(tenantKey) || localStorage.getItem(KEYS.CONFIG);
     let cfg: AppConfig = DEFAULT_CONFIG;
     if (stored) {
       const parsed = JSON.parse(stored);
@@ -996,9 +1026,9 @@ export function getAppConfig(): AppConfig {
         const hostname = window.location.hostname.toLowerCase().trim();
         const searchParams = new URLSearchParams(window.location.search);
         const paramDomain = (searchParams.get('domain') || searchParams.get('tenant') || '').toLowerCase().trim();
-        const overrideDomain = getActiveTestingDomain()?.toLowerCase().trim() || '';
+        const override = overrideDomain || getActiveTestingDomain()?.toLowerCase().trim() || '';
 
-        const target = paramDomain || overrideDomain || hostname;
+        const target = paramDomain || override || hostname;
 
         if (target) {
           const matched = cfg.domain_tenants.find((t) => {
@@ -1018,6 +1048,8 @@ export function getAppConfig(): AppConfig {
               telepon_sekolah: matched.telepon_sekolah || cfg.telepon_sekolah,
               nama_kepala_sekolah: matched.nama_kepala_sekolah || cfg.nama_kepala_sekolah,
               nip_kepala_sekolah: matched.nip_kepala_sekolah || cfg.nip_kepala_sekolah,
+              firebase_config: matched.firebase_config || cfg.firebase_config,
+              supabase_config: matched.supabase_config || cfg.supabase_config,
               active_tenant_id: matched.id,
               active_domain: matched.domain,
             };
@@ -1180,7 +1212,9 @@ export function applyFavicon(faviconUrl?: string) {
   applyAppMetaData();
 }
 
-export function saveAppConfig(cfg: AppConfig) {
+export function saveAppConfig(cfg: AppConfig, overrideDomain?: string) {
+  const tenantKey = getTenantStorageKey(KEYS.CONFIG, overrideDomain);
+  localStorage.setItem(tenantKey, JSON.stringify(cfg));
   localStorage.setItem(KEYS.CONFIG, JSON.stringify(cfg));
   if (cfg.mysql_api_url !== undefined) {
     setApiBaseUrl(cfg.mysql_api_url);
@@ -1199,7 +1233,7 @@ export function saveAppConfig(cfg: AppConfig) {
 
   addSystemLog({
     type: 'config',
-    action: 'Perubahan Pengaturan Sekolah & Jam Operasional',
+    action: 'Perubahan Pengaturan Sekolah & Jam Operasional Domain',
     user: 'developer',
     role: 'developer',
     status: 'success',
@@ -1236,7 +1270,9 @@ export function resetAppConfig(): AppConfig {
 
 export function getAbsensiList(): AbsensiRecord[] {
   try {
-    const list = JSON.parse(localStorage.getItem(KEYS.ABSENSI) || '[]');
+    const tenantKey = getTenantStorageKey(KEYS.ABSENSI);
+    const raw = localStorage.getItem(tenantKey) || localStorage.getItem(KEYS.ABSENSI);
+    const list = JSON.parse(raw || '[]');
     if (Array.isArray(list)) {
       return list.map((a: any) => ({
         id: String(a.id || Date.now()),
@@ -1259,6 +1295,8 @@ export function getAbsensiList(): AbsensiRecord[] {
 }
 
 export function saveAbsensiList(list: AbsensiRecord[]) {
+  const tenantKey = getTenantStorageKey(KEYS.ABSENSI);
+  localStorage.setItem(tenantKey, JSON.stringify(list));
   localStorage.setItem(KEYS.ABSENSI, JSON.stringify(list));
   notifyDataChanged('absensi', list);
 }
